@@ -1,0 +1,30 @@
+[tool.pytest.ini_options]
+# Pytest Konfiguration
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["src"]        
+
+# Ausführliche Ausgabe
+addopts = [
+    "-v",                    # Verbose
+    "--strict-markers",      # Nur registrierte Marker erlauben
+    "--tb=short",           # Kurze Tracebacks
+    "--cov=.",              # Code Coverage für aktuelles Verzeichnis
+    "--cov-report=html",    # HTML Coverage Report
+    "--cov-report=term",    # Terminal Coverage Report
+]
+
+# Marker für verschiedene Testtypen
+markers = [
+    "unit: Unit tests für einzelne Funktionen",
+    "integration: Integration tests für das gesamte Skript",
+    "slow: Langsame Tests die lange dauern",
+]
+
+# Warnungen
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+]

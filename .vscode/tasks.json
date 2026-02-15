@@ -5,7 +5,9 @@
             "label": "Run All Tests",
             "type": "shell",
             "command": "pytest",
-            "args": ["-v"],
+            "args": [
+                "-v"
+            ],
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -15,7 +17,9 @@
             "label": "Run Calendar Generator",
             "type": "shell",
             "command": "python",
-            "args": ["calendar_generator.py"],
+            "args": [
+                "src/excel_2_ics.py"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true

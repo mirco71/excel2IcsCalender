@@ -1,0 +1,9 @@
+# Test-Dependencies
+pytest>=8.0.0
+pytest-cov>=4.1.0  # Für Code Coverage
+pytest-xdist>=3.5.0  # Für parallele Tests
+
+# Projekt-Dependencies
+pandas>=2.0.0
+openpyxl>=3.1.0  # Für Excel-Support
+ics>=0.7.2
