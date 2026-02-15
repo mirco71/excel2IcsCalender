@@ -1,0 +1,12 @@
+# Haupt-Dependencies für Trainingsplan Generator
+# Installation: pip install -r requirements.txt
+
+# Excel-Verarbeitung
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Kalender-Generierung
+ics>=0.7.2
+
+# Datum/Zeit
+python-dateutil>=2.8.2

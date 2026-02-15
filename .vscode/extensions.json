@@ -1,0 +1,5 @@
+REM Einfach normal arbeiten:
+cd R:\python\ECB\Excel2IcsCalendar
+venv\Scripts\activate
+python calendar_generator.py
+pytest -v
