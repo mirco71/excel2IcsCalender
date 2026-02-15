@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch, MagicMock
 
 # Import der refactored Version
 try:
-    from src.excel_2_ics import (
+    from src.excel_2_ics_refactored import (
         clean_time_str,
         is_training_time,
         parse_time_range,
@@ -22,7 +22,7 @@ try:
         BERLIN_TZ
     )
 except ImportError:
-    print("Verwende calendar_generator_refactored.py")
+    print("Verwende excel_2_ics_refactored.py")
 
 
 # === Fixtures ===
@@ -361,7 +361,7 @@ class TestIntegration:
 class TestWithMocking:
     """Tests mit Mocking für externe Abhängigkeiten."""
     
-    @patch('calendar_generator_refactored.pd.read_excel')
+    @patch('src.excel_2_ics_refactored.pd.read_excel')
     def test_process_calendar_with_mock_excel(
         self, 
         mock_read_excel, 
@@ -433,4 +433,4 @@ class TestPerformance:
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--cov=calendar_generator_refactored"])
+    pytest.main([__file__, "-v", "--cov=excel_2_ics_refactored"])
