@@ -17,7 +17,7 @@ try:
         parse_game
     )
 except ImportError:
-    print("HINWEIS: Benenne dein Skript in 'calendar_generator.py' um oder passe den Import an")
+    print("HINWEIS: Benenne dein Skript in 'excel_2_ics.py' um oder passe den Import an")
     sys.exit(1)
 
 
@@ -26,7 +26,7 @@ class TestCleanTimeStr:
     
     def test_valid_time_string(self):
         assert clean_time_str("14:30") == "14:30"
-        assert clean_time_str("9:00") == "9:00"
+        assert clean_time_str("9:00") == "09:00"
     
     def test_time_with_spaces(self):
         assert clean_time_str(" 14:30 ") == "14:30"
@@ -55,7 +55,7 @@ class TestIsTrainingTime:
     
     def test_valid_training_time(self):
         assert is_training_time("17:00-18:30") is True
-        assert is_training_time("9:00-10:30") is True
+        assert is_training_time("09:00-10:30") is True
     
     def test_invalid_formats(self):
         assert is_training_time("17:00") is False
@@ -195,7 +195,7 @@ class TestEdgeCases:
 # Parametrisierte Tests für mehrere Eingaben
 @pytest.mark.parametrize("time_input,expected", [
     ("14:30", "14:30"),
-    ("9:00", "9:00"),
+    ("09:00", "09:00"),
     (" 14:30 ", "14:30"),
     ("1430", "14:30"),
 ])
