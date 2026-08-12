@@ -1,12 +1,22 @@
 # Haupt-Dependencies für Trainingsplan Generator
 # Installation: pip install -r requirements.txt
 
-# Excel-Verarbeitung
+# Excel-Verarbeitung (nur noch für den Alt-Weg Excel → ICS)
 pandas>=2.0.0
 openpyxl>=3.1.0
 
-# Kalender-Generierung
+# Kalender-Generierung und -Auswertung
 ics>=0.7.2
+
+# TatSu ist eine indirekte Abhängigkeit von ics. Ab 5.7 hat sich die
+# ParserConfig-Schnittstelle geändert, ics 0.7.2 bricht damit beim Import ab
+# ("Unknown settings for ParserConfig: {'buffer_class'}"). Deshalb hier fest
+# nach unten begrenzt, sonst ist eine frische Installation sofort kaputt.
+tatsu==5.6.1
 
 # Datum/Zeit
 python-dateutil>=2.8.2
+
+# ECB Kalender-Bridge: Google-Kalender über ein Dienstkonto beschreiben
+google-api-python-client==2.149.0
+google-auth==2.35.0

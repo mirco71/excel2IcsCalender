@@ -236,3 +236,6 @@ tmp/
 temp/
 *.tmp
 *.temp
+
+# Bridge-Entwicklungsumgebung (siehe README, Abschnitt Kalender-Bridge)
+.venv-bridge/

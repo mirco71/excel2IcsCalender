@@ -1,0 +1,10 @@
+# Nur was die Bridge braucht (Kalenderview → Google).
+# Der Alt-Weg Excel → ICS mit pandas/openpyxl ist hier absichtlich nicht dabei:
+# Er läuft nicht im Container und würde das Abbild ohne Gegenwert vergrößern.
+
+ics>=0.7.2
+# Siehe requirements.txt: ics 0.7.2 bricht mit TatSu ab 5.7 beim Import ab.
+tatsu==5.6.1
+
+google-api-python-client==2.149.0
+google-auth==2.35.0

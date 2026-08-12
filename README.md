@@ -2,7 +2,68 @@
 
 Automatische Konvertierung von Excel-Trainingsplänen in Kalenderformate (CSV & ICS) für Jugendmannschaften.
 
-## 🎯 Features
+> **Hinweis zum Stand:** Dieses Repository enthält inzwischen **zwei** Wege.
+> Der neue ist die [Kalender-Bridge](#-ecb-kalender-bridge) (Kalenderview →
+> Google), der alte die Excel-Umwandlung darunter. Sobald die Bridge produktiv
+> läuft, wird der Excel-Weg nicht mehr gebraucht — die Termine kommen dann aus
+> Hallenplanung über Kalenderview.
+
+## 🌉 ECB Kalender-Bridge
+
+Holt für jedes Team den öffentlichen iCalendar-Feed aus
+[Kalenderview](https://github.com/mirco71/ECB_Kalenderview) und gleicht ihn
+gegen den zugehörigen Google-Kalender ab.
+
+**Was sich gegenüber dem alten `clear_n_update.py` ändert:**
+
+| | alt | neu |
+|---|---|---|
+| Vorgehen | alle Termine löschen, neu anlegen | gezielt anlegen, ändern, löschen |
+| Abonnenten | sehen bei jedem Lauf alles als „neu" | sehen nur echte Änderungen |
+| Abbruch mittendrin | halb leerer Kalender | unvollständiger Lauf, nächster repariert ihn |
+| Fremde Termine im Kalender | wurden mitgelöscht | bleiben unangetastet |
+| Anmeldung | OAuth mit Browserfenster | Dienstkonto, ohne Bildschirm nutzbar |
+
+Möglich wird das durch zwei Dinge: die **stabile `iCalUID`** aus Hallenplanung,
+über die Google einen verschobenen Termin als denselben erkennt, und die
+Markierung `extendedProperties.private.ecb_bridge` an jedem selbst angelegten
+Termin — aufgeräumt wird ausschließlich in dieser Menge.
+
+### Aufruf
+
+```bash
+python -m src.bridge                    # alle konfigurierten Kalender, einmal
+python -m src.bridge --dry-run          # nur anzeigen, nichts schreiben
+python -m src.bridge --team U17         # nur ein Team
+python -m src.bridge --interval 900     # Dauerbetrieb, alle 15 Minuten
+```
+
+### Konfiguration
+
+| Variable | Bedeutung |
+|---|---|
+| `ECB_CALENDARS` | JSON-Objekt Team → Kalender-ID, z.B. `{"U17": "abc@group.calendar.google.com"}` |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Pfad auf die Dienstkonto-Schlüsseldatei |
+| `ECB_FEED_BASE` | Basis-URL der Feeds, Vorgabe `http://ecb-kalender:3000/feeds` |
+| `ECB_PAST_DAYS` | Wie weit zurück verwaltet wird, Vorgabe 30 Tage |
+
+Die Einrichtung des Dienstkontos (Google Cloud Console, Freigabe der zehn
+Kalender) ist im Projektplan unter „Google-Dienstkonto einrichten" beschrieben.
+
+### Betrieb
+
+Als Dienst im selben Portainer-Stack wie Kalenderview, siehe
+[`docker-compose.bridge.yml`](docker-compose.bridge.yml). Dann erreicht die
+Bridge Kalenderview über den Servicenamen im internen Docker-Netz, ohne Umweg
+über das Internet.
+
+**Erster Lauf immer gegen einen Wegwerf-Kalender**, nicht gegen die zehn
+produktiven — und danach ein zweites Mal: Der muss `0 übertragen, 0 gelöscht`
+melden. Das ist der Beweis, dass der Abgleich wiederholbar ist.
+
+---
+
+## 🎯 Features (Excel-Weg)
 
 - ✅ Konvertiert Excel-Trainingspläne in CSV (Google Calendar) und ICS (Standard-Kalender)
 - ✅ Unterstützt mehrere Teams gleichzeitig

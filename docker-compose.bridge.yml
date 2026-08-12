@@ -1,0 +1,27 @@
+# Ergänzung für den vorhandenen Portainer-Stack neben `ecb-kalender`.
+# Der Inhalt gehört in denselben Stack, damit beide Dienste im selben
+# Docker-Netz liegen und die Bridge Kalenderview über den Servicenamen
+# erreicht — ohne Umweg über das Internet.
+
+services:
+  ecb-kalender-bridge:
+    build:
+      context: .
+    image: ecb-kalender-bridge:latest
+    container_name: ecb-kalender-bridge
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/Berlin}
+      # Servicename des Kalenderview-Containers im selben Stack.
+      ECB_FEED_BASE: ${ECB_FEED_BASE:-http://ecb-kalender:3000/feeds}
+      # JSON-Objekt Team → Kalender-ID, als Stack-Umgebungsvariable in
+      # Portainer gesetzt. Die IDs sind keine Geheimnisse.
+      ECB_CALENDARS: ${ECB_CALENDARS:?ECB_CALENDARS muss als Stack-Variable gesetzt werden}
+      # Pfad auf die eingehängte Dienstkonto-Schlüsseldatei.
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/ecb-bridge-key.json
+    volumes:
+      # Der Schlüssel liegt auf dem Host und wird nur lesend eingehängt —
+      # er gehört weder ins Abbild noch ins Repository.
+      - /opt/ecb/secrets/ecb-bridge-key.json:/secrets/ecb-bridge-key.json:ro
+    depends_on:
+      - ecb-kalender
