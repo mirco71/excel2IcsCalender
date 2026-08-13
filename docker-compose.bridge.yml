@@ -1,7 +1,18 @@
-# Ergänzung für den vorhandenen Portainer-Stack neben `ecb-kalender`.
-# Der Inhalt gehört in denselben Stack, damit beide Dienste im selben
-# Docker-Netz liegen und die Bridge Kalenderview über den Servicenamen
-# erreicht — ohne Umweg über das Internet.
+# ECB Kalender-Bridge als eigener Portainer-Stack.
+#
+# Bewusst ein zweiter Stack und nicht ein Dienst im Kalenderview-Stack: Beide
+# laufen per Repository-Methode, jeder baut aus seinem eigenen Repository. Ein
+# gemeinsamer Stack hätte nur ein Build-Verzeichnis und käme an dieses
+# Dockerfile nicht heran.
+#
+# Damit die Bridge Kalenderview trotzdem über den Servicenamen erreicht, hängt
+# sie sich an dessen Netz. Der Name unten muss zum Kalenderview-Stack passen:
+# Portainer benennt das Netz nach dem Stack, also `<stackname>_default`.
+# Nachsehen unter Portainer → Networks.
+#
+# Alternative ohne geteiltes Netz: ECB_FEED_BASE auf die Host-Adresse setzen,
+# z.B. http://192.168.178.231:3050/feeds. Einfacher einzurichten, dafür läuft
+# der Verkehr über den Host statt direkt zwischen den Containern.
 
 services:
   ecb-kalender-bridge:
@@ -12,16 +23,22 @@ services:
     restart: unless-stopped
     environment:
       TZ: ${TZ:-Europe/Berlin}
-      # Servicename des Kalenderview-Containers im selben Stack.
+      # Servicename des Kalenderview-Containers im geteilten Netz.
       ECB_FEED_BASE: ${ECB_FEED_BASE:-http://ecb-kalender:3000/feeds}
-      # JSON-Objekt Team → Kalender-ID, als Stack-Umgebungsvariable in
-      # Portainer gesetzt. Die IDs sind keine Geheimnisse.
+      # JSON-Objekt Team → Kalender-ID, als Stack-Variable in Portainer gesetzt.
+      # Zum Testen hier NUR den Wegwerf-Kalender eintragen, nicht die zehn
+      # produktiven.
       ECB_CALENDARS: ${ECB_CALENDARS:?ECB_CALENDARS muss als Stack-Variable gesetzt werden}
-      # Pfad auf die eingehängte Dienstkonto-Schlüsseldatei.
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/ecb-bridge-key.json
     volumes:
-      # Der Schlüssel liegt auf dem Host und wird nur lesend eingehängt —
-      # er gehört weder ins Abbild noch ins Repository.
-      - /opt/ecb/secrets/ecb-bridge-key.json:/secrets/ecb-bridge-key.json:ro
-    depends_on:
-      - ecb-kalender
+      # Der Dienstkonto-Schlüssel liegt auf dem Host und wird nur lesend
+      # eingehängt — er gehört weder ins Abbild noch ins Repository.
+      # Synology: /volume1/docker/ecb-bridge/secrets/ecb-bridge-key.json
+      # Debian:   /opt/ecb/secrets/ecb-bridge-key.json
+      - ${ECB_KEY_FILE:?ECB_KEY_FILE muss auf die Schlüsseldatei zeigen}:/secrets/ecb-bridge-key.json:ro
+
+networks:
+  default:
+    # Name des vom Kalenderview-Stack erzeugten Netzes.
+    name: ${ECB_NETWORK:-eisbelegungsplan_default}
+    external: true

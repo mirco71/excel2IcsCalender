@@ -52,10 +52,15 @@ Kalender) ist im Projektplan unter „Google-Dienstkonto einrichten" beschrieben
 
 ### Betrieb
 
-Als Dienst im selben Portainer-Stack wie Kalenderview, siehe
-[`docker-compose.bridge.yml`](docker-compose.bridge.yml). Dann erreicht die
-Bridge Kalenderview über den Servicenamen im internen Docker-Netz, ohne Umweg
-über das Internet.
+Als **eigener Portainer-Stack** neben Kalenderview, siehe
+[`deploy-portainer.md`](deploy-portainer.md) und
+[`docker-compose.bridge.yml`](docker-compose.bridge.yml).
+
+Bewusst ein zweiter Stack: Beide laufen per Repository-Methode und bauen aus
+ihrem jeweils eigenen Repository — ein gemeinsamer Stack hätte nur ein
+Build-Verzeichnis und käme an dieses Dockerfile nicht heran. Damit die Bridge
+Kalenderview trotzdem über den Servicenamen erreicht, hängt sie sich an dessen
+Netz.
 
 **Erster Lauf immer gegen einen Wegwerf-Kalender**, nicht gegen die zehn
 produktiven — und danach ein zweites Mal: Der muss `0 übertragen, 0 gelöscht`
