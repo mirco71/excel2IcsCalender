@@ -301,3 +301,31 @@ class TestParseFeed:
     def test_leerer_kalender_ergibt_leere_liste(self):
         leer = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//x//x//DE\r\nEND:VCALENDAR\r\n"
         assert parse_feed(leer) == []
+
+
+class TestFetchFeed:
+    def test_sendet_eigene_kennung_statt_python_urllib(self):
+        """Cloudflare blockt ``Python-urllib`` mit Fehler 1010."""
+        from src.feed_reader import USER_AGENT, fetch_feed
+
+        gesehen = []
+
+        class _Antwort:
+            def read(self):
+                return b"BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return False
+
+        def opener(request, timeout=None):  # noqa: ARG001
+            gesehen.append(request)
+            return _Antwort()
+
+        fetch_feed("https://kalender.example/feeds/u17.ics", opener=opener)
+
+        agent = gesehen[0].get_header("User-agent")
+        assert agent == USER_AGENT
+        assert "Python-urllib" not in agent

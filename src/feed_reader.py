@@ -72,10 +72,19 @@ MANAGED_KEY = "ecb_bridge"
 MANAGED_VALUE = "1"
 
 
+#: Eigene Absenderkennung. Die urllib-Vorgabe ``Python-urllib/3.x`` blockt
+#: Cloudflares Browser-Integritätsprüfung mit Fehler 1010 — beobachtet am
+#: 2026-09-17 am Tunnel der Eishalle. Über das interne Docker-Netz fällt das nicht
+#: auf; zeigt ``ECB_FEED_BASE`` auf die öffentliche Adresse, wäre jeder Feed
+#: geblockt und die Bridge würde jedes Team überspringen.
+USER_AGENT = "ECB-Kalender-Bridge/1.0"
+
+
 def fetch_feed(url: str, *, timeout: float = DEFAULT_TIMEOUT, opener=None) -> str:
     """Lädt einen Feed als Text. ``opener`` ist der Einstiegspunkt für Tests."""
     open_url = opener or urllib.request.urlopen
-    with open_url(url, timeout=timeout) as response:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with open_url(request, timeout=timeout) as response:
         return response.read().decode("utf-8")
 
 
