@@ -329,3 +329,52 @@ class TestFetchFeed:
         agent = gesehen[0].get_header("User-agent")
         assert agent == USER_AGENT
         assert "Python-urllib" not in agent
+
+
+class TestEinKalenderKipptNichtAlle:
+    """Beobachtet am 2026-09-17: ein nicht freigegebener Kalender brach den Lauf ab."""
+
+    class _GoogleFehler(Exception):
+        def __init__(self, status):
+            super().__init__(f"HttpError {status}")
+            self.resp = type("Resp", (), {"status": status})()
+
+    def _config(self):
+        return BridgeConfig(
+            feed_base="http://kalender:3000/feeds",
+            key_file="/secrets/key.json",
+            calendars={"U13": "nicht-freigegeben", "U17": "cal-u17"},
+        )
+
+    def _api(self, status):
+        fehler = self._GoogleFehler(status)
+
+        class Api(FakeApi):
+            def list_managed(self, calendar_id, time_min):
+                if calendar_id == "nicht-freigegeben":
+                    raise fehler
+                return super().list_managed(calendar_id, time_min)
+
+        return Api()
+
+    def test_uebrige_kalender_werden_trotzdem_abgeglichen(self):
+        api = self._api(404)
+        reports = run(self._config(), api, loader=lambda url: [event()])
+
+        erfolgreich = [r for r in reports if not r.errors]
+        assert [r.calendar for r in erfolgreich] == ["U17"]
+        assert api.imported  # U17 wurde übertragen
+
+    def test_404_nennt_die_fehlende_freigabe(self):
+        reports = run(self._config(), self._api(404), loader=lambda url: [event()])
+        fehler = next(r for r in reports if r.errors).errors[0]
+
+        assert fehler.startswith("U13:")
+        assert "freigegeben" in fehler
+
+    def test_403_nennt_das_zu_schwache_recht(self):
+        reports = run(self._config(), self._api(403), loader=lambda url: [event()])
+        fehler = next(r for r in reports if r.errors).errors[0]
+
+        assert "403" in fehler
+        assert "Änderungen vornehmen" in fehler

@@ -26,7 +26,13 @@ import time
 from dataclasses import dataclass
 
 from src.feed_reader import FeedEvent, load_feed
-from src.google_calendar import DEFAULT_PAST_DAYS, EventsApi, GoogleEventsApi, sync_calendar
+from src.google_calendar import (
+    DEFAULT_PAST_DAYS,
+    EventsApi,
+    GoogleEventsApi,
+    SyncReport,
+    sync_calendar,
+)
 
 LOG = logging.getLogger("bridge")
 
@@ -116,20 +122,56 @@ def run(
             LOG.error("Feed %s nicht abrufbar (%s) — Kalender bleibt unverändert", url, exc)
             continue
 
-        report = sync_calendar(
-            api,
-            calendar_id,
-            events,
-            label=team,
-            past_days=config.past_days,
-            dry_run=dry_run,
-        )
+        try:
+            report = sync_calendar(
+                api,
+                calendar_id,
+                events,
+                label=team,
+                past_days=config.past_days,
+                dry_run=dry_run,
+            )
+        except Exception as exc:  # noqa: BLE001 — ein Kalender darf die übrigen nicht kippen
+            # Beobachtet am 2026-09-17: Ein nicht freigegebener Testkalender ließ
+            # den ganzen Lauf mit einem Traceback abbrechen. Bei zehn Kalendern
+            # hätte ein einziger Fehler die anderen neun mit blockiert.
+            message = _google_error_hint(exc, team, calendar_id)
+            LOG.error("%s", message)
+            reports.append(SyncReport(calendar=team, errors=[message]))
+            continue
+
         reports.append(report)
         LOG.info("%s", report.summary())
         for error in report.errors:
             LOG.error("  %s", error)
 
     return reports
+
+
+def _google_error_hint(exc: Exception, team: str, calendar_id: str) -> str:
+    """Übersetzt einen Google-Fehler in eine Meldung, mit der man etwas anfangen kann.
+
+    Für ein Dienstkonto meldet Google einen **nicht freigegebenen** Kalender als
+    404 „Not Found" statt als fehlende Berechtigung — der Kalender soll für
+    Unbefugte nicht einmal existieren. Ohne diesen Hinweis sucht man den Fehler
+    in der Kalender-ID, obwohl meist nur die Freigabe fehlt.
+    """
+    status = getattr(getattr(exc, "resp", None), "status", None)
+    prefix = f"{team}: Kalender {calendar_id} nicht abgeglichen"
+    if status in (404, "404"):
+        return (
+            f"{prefix} (HTTP 404). Meist ist der Kalender nicht für das Dienstkonto "
+            "freigegeben (Einstellungen und Freigabe > Geteilt mit, Recht „Änderungen "
+            "vornehmen und alle Details des Termins ansehen“), seltener ist die "
+            "Kalender-ID in ECB_CALENDARS falsch."
+        )
+    if status in (403, "403"):
+        return (
+            f"{prefix} (HTTP 403). Das Dienstkonto sieht den Kalender, darf aber nicht "
+            "schreiben — Freigabe-Recht auf „Änderungen vornehmen und alle Details des "
+            "Termins ansehen“ setzen."
+        )
+    return f"{prefix}: {type(exc).__name__}: {exc}"
 
 
 def main(argv: list[str] | None = None) -> int:
